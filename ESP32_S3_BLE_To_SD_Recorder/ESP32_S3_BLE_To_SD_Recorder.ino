@@ -22,6 +22,7 @@ const int chipSelect = 21;
 bool serialdebug = true;
 
 char savefilename[30] = "/datalog_00.txt";  //Starting File Name
+int session_number = 0;
 File file; //Main file being written.
 
 
@@ -130,7 +131,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 		}
 		
 		file.printf(rtc.getTime().c_str());
-		file.printf(": %i %s ", sequenceNumber, advertisedDevice->getAddress().toString().c_str());
+		file.printf(": %i %i %s ", session_number, sequenceNumber, advertisedDevice->getAddress().toString().c_str());
 		for (int i = 2; i < strManufacturerData.length(); i++) {
 			file.printf("%02x", cManufacturerData[i]);
 		}
@@ -202,7 +203,7 @@ int dircount = 0;
 
 void setup() {
 	delay(1000);  // prevents usb driver crash on startup, do not omit this
-	
+	session_number = random(1,9999999);
 	//initialize Failures and Time HERE!
 
 
@@ -286,8 +287,8 @@ void loop() {
 			failures++;
 			Serial.println("Failed to open file for appending");
 		  dircount = listDir(SD,"/",1);
-      sprintf(savefilename, "/datalog%d_%d.txt", dircount, failures);
-			writeFile(SD, savefilename, "Hello");
+		sprintf(savefilename, "/datalog%d_%d.txt", dircount, failures);
+			//writeFile(SD, savefilename, "Hello");
 			return;
 		} 
 	}
