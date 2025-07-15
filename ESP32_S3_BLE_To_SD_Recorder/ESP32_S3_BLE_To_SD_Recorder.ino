@@ -18,8 +18,9 @@
 #include <ESP32Time.h>
 
 ESP32Time rtc(3600); 			//Used to track time between messages.
-const int chipSelect = 21
-bool serialdebug = false;
+const int chipSelect = 21;
+bool serialdebug = true;
+
 char savefilename[30] = "/datalog_00.txt";  //Starting File Name
 File file; //Main file being written.
 
@@ -35,6 +36,39 @@ File dataFile;
 #define ENDIAN_CHANGE_U16(x) ((((x)&0xFF00) >> 8) + (((x)&0xFF) << 8))
 
 hw_timer_t *My_timer = NULL;
+
+int listDir(fs::FS &fs, const char * dirname, uint8_t levels){
+    //Serial.printf("Listing directory: %s\n", dirname);
+    File root = fs.open(dirname);
+    if(!root){
+        Serial.println("Failed to open directory");
+        return 9999;
+    }
+    if(!root.isDirectory()){
+        Serial.println("Not a directory");
+        return 9999;
+    }
+    int filecount = 0;
+    File file = root.openNextFile();
+    while(file){
+        filecount++;
+        if(file.isDirectory()){
+            Serial.print("  DIR : ");
+            Serial.println(file.name());
+            if(levels){
+                listDir(fs, file.path(), levels -1);
+            }
+        } else {
+            Serial.print("  FILE: ");
+            Serial.print(file.name());
+            Serial.print("  SIZE: ");
+            Serial.println(file.size());
+        }
+        file = root.openNextFile();
+    }
+    return filecount;
+}
+
 
 // Use to create the file.
 void writeFile(fs::FS &fs, const char * path, const char * message){
@@ -104,7 +138,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 		if (serialdebug) Serial.printf("\n");
 		//file.close();
 		
-		if (sequenceNumber %% 2 == 1){
+		if (sequenceNumber % 2 == 1){
 			digitalWrite(LED_BUILTIN, LOW);
 		} else {
 			digitalWrite(LED_BUILTIN, HIGH);
@@ -159,19 +193,18 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 		}
 	return;
   }
+}
 };
 
 
-
 int failures = 0;	//Used to create new files when something errors, but might be overwriting... 
-
+int dircount = 0;
 
 void setup() {
 	delay(1000);  // prevents usb driver crash on startup, do not omit this
 	
 	//initialize Failures and Time HERE!
-	
-	rtc.setTime(0,0,1,1,1,2023);
+
 
 	if (serialdebug){
 		Serial.begin(115200);
@@ -183,6 +216,11 @@ void setup() {
 		// don't do anything more but wait to try again.
 		sleep(10);
 	}
+  	
+	rtc.setTime(0,0,1,1,1,2023);
+  dircount = listDir(SD,"/",1);
+  sprintf(savefilename, "/datalog%d_%d.txt", dircount, failures);
+	//writeFile(SD, savefilename, "Hello");
 	sleep(1);
 
 	//BLE Scanner Setup Starts Now!
@@ -247,7 +285,8 @@ void loop() {
 		if(!file){
 			failures++;
 			Serial.println("Failed to open file for appending");
-			sprintf(savefilename, "/datalog%d.txt", failures);
+		  dircount = listDir(SD,"/",1);
+      sprintf(savefilename, "/datalog%d_%d.txt", dircount, failures);
 			writeFile(SD, savefilename, "Hello");
 			return;
 		} 
