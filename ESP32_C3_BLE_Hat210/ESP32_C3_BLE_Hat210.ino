@@ -108,8 +108,7 @@ uint32_t mode_array[] = {
   strip.Color(255, 0, 0),     //17 Yellow ORange
   strip.Color(50, 50, 50),                                   //18 Lime Greenstrip.Color(51, 255, 51), 
   strip.Color(255, 99, 33),       //19 Orange
-  strip.Color(255, 102, 0),
-  strip.Color(195, 122, 123), 
+  strip.Color(255, 102, 0)
 };  
 
 // Temporary Variables for pattern colors
@@ -721,6 +720,8 @@ void e912_function(uint8_t param1, uint8_t param2, uint8_t param3,uint8_t param4
 	
 				if (cManufacturerData[5] == 0x05){      //e905 - Single Color Function 
 					e905_function(cManufacturerData[7],cManufacturerData[8],cManufacturerData[9]);
+				} else if (cManufacturerData[5] == 0x06){ // Possibly 2 color function
+					e906_function(cManufacturerData[6],cManufacturerData[7],cManufacturerData[10],cManufacturerData[11],cManufacturerData[12]);
 				} else if (cManufacturerData[5] == 0x08){ // Possibly 2 color function
 					e908_function(cManufacturerData[6],cManufacturerData[7],cManufacturerData[10],cManufacturerData[11],cManufacturerData[12]);
 				} else if (cManufacturerData[5] == 0x09){ // 5 color function

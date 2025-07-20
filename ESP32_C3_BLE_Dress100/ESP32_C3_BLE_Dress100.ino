@@ -70,13 +70,13 @@ uint32_t pallet_array[] = {
   strip.Color(255, 60, 255),     //5 = bright purple
   strip.Color(153, 0, 153),      //6 = lavender
   strip.Color(153, 0, 153),      //7 = purple
-  strip.Color(195, 122, 123),      //8 = pink
-  strip.Color(195, 122, 123),     //9 = pink
-  strip.Color(195, 122, 123),      //10 = pink
-  strip.Color(195, 122, 123),      //11 = pink
-  strip.Color(195, 122, 123),      //12 = pink
-  strip.Color(195, 122, 123),      //13 = pink
-  strip.Color(195, 122, 123),      //14 = pink
+  strip.Color(153, 0, 153),      //8 = pink
+  strip.Color(153, 0, 153),     //9 = pink
+  strip.Color(153, 0, 153),      //10 = pink
+  strip.Color(153, 0, 153),      //11 = pink
+  strip.Color(153, 0, 153),     //12 = pink
+  strip.Color(153, 0, 153),      //13 = pink
+  strip.Color(153, 0, 153),      //14 = pink
   strip.Color(255, 60, 0),       //15 = Yellow Orange
   strip.Color(255, 255, 128),    //16 Off Yellow
   strip.Color(255, 200, 50),     //17 Yellow ORange
@@ -585,7 +585,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
         //00 11 0e ef b0
         
         if (cManufacturerData[5] == 0x05){      //e905 - Single Color Function 
-          solid_color_function(cManufacturerData[7],cManufacturerData[8],cManufacturerData[9]);
+          e905_function(cManufacturerData[7],cManufacturerData[8],cManufacturerData[9]);
         } else if (cManufacturerData[5] == 0x06){ // Possibly 2 color function
           e906_function(cManufacturerData[6],cManufacturerData[7],cManufacturerData[8],cManufacturerData[9],cManufacturerData[10]);
         }else if (cManufacturerData[5] == 0x08){ // Possibly 2 color function
