@@ -106,7 +106,8 @@ uint32_t mode_array[] = {
   strip.Color(255, 0, 0),     //17 Yellow ORange
   strip.Color(50, 50, 50),                                   //18 Lime Greenstrip.Color(51, 255, 51), 
   strip.Color(255, 99, 33),       //19 Orange
-  strip.Color(255, 102, 0)
+  strip.Color(255, 102, 0),
+  strip.Color(195, 122, 123), 
 };  
 
 // Temporary Variables for pattern colors
