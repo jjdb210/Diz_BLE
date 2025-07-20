@@ -39,17 +39,18 @@ int sequenceNumber = 0;
 int mode = 1;  
 int dressmode = 0; //Default to Kid mode (details at: https://emcot.world/index.php/Disney_Bluetooth_Wands)
 bool blackout = false;
-
+bool serialdebug = true;
 int lastmode = 0;
 int timer = 0;
-
+int dircount = 1;
 BLEScan *pBLEScan; //Old code but compatible
 
 int selected_color = 0;
 int last_color = 0;
+int last_sequence = 0;
 
 ESP32Time rtc(3600);  //Realtime clock for logging
-const int chipSelect = 21;
+const int chipSelect = D7;
 char savefilename[30] = "/datalog_00.txt";
 int session_number = 0;
 
@@ -58,6 +59,7 @@ File file; // STore Logs Here
 //Hat and Dress are GRB
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(N_LEDS, PIN, NEO_GRB + NEO_KHZ800);
 
+//0x8301E100E90500090EEDB0
 //https://emcot.world/Disney_MagicBand%2B_Bluetooth_Codes
 uint32_t pallet_array[] = { 
   strip.Color(0, 255, 255),      //0 = Cyan
@@ -68,13 +70,13 @@ uint32_t pallet_array[] = {
   strip.Color(255, 60, 255),     //5 = bright purple
   strip.Color(153, 0, 153),      //6 = lavender
   strip.Color(153, 0, 153),      //7 = purple
-  strip.Color(195, 122, 123),      //8 = pink
-  strip.Color(195, 122, 123),     //9 = pink
-  strip.Color(195, 122, 123),      //10 = pink
-  strip.Color(195, 122, 123),      //11 = pink
-  strip.Color(195, 122, 123),      //12 = pink
-  strip.Color(195, 122, 123),      //13 = pink
-  strip.Color(195, 122, 123),      //14 = pink
+  strip.Color(153, 0, 153),      //8 = pink
+  strip.Color(153, 0, 153),     //9 = pink
+  strip.Color(153, 0, 153),      //10 = pink
+  strip.Color(153, 0, 153),      //11 = pink
+  strip.Color(153, 0, 153),     //12 = pink
+  strip.Color(153, 0, 153),      //13 = pink
+  strip.Color(153, 0, 153),      //14 = pink
   strip.Color(255, 60, 0),       //15 = Yellow Orange
   strip.Color(255, 255, 128),    //16 Off Yellow
   strip.Color(255, 200, 50),     //17 Yellow ORange
