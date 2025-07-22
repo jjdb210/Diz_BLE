@@ -30,7 +30,7 @@
 //dress!! #define PIN D10
 #define N_LEDS 110
 #define DRESS_ID 1  //Each dress needs an ID (1-5) (Links specific wands. Not currently in use)
-
+#define PIN D10
 //Initiliaze the dress strip.
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(N_LEDS, PIN, NEO_BGR + NEO_KHZ800);
 
@@ -76,7 +76,7 @@ uint32_t pallet_array[] = {
   strip.Color(153, 0, 153),      //11 = pink
   strip.Color(153, 0, 153),     //12 = pink
   strip.Color(153, 0, 153),      //13 = pink
-  strip.Color(153, 0, 153),      //14 = pink
+  strip.Color(255, 50, 50),      //14 = pink
   strip.Color(255, 60, 0),       //15 = Yellow Orange
   strip.Color(255, 255, 128),    //16 Off Yellow
   strip.Color(255, 200, 50),     //17 Yellow ORange
@@ -131,6 +131,29 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 		strip.show();
 		delay(3000);
 	}
+
+	void e905v2_function(uint8_t param1, uint8_t param2, uint8_t param3){
+		int color = param3 & 0x1f;
+		mode = 2;
+    
+		Serial.printf("E905v2: %i", color);
+    if ((color > 8 && color < 15) || color == 31){
+      selected_color = color;
+      mode = 0;
+      lastmode = -1;
+      return;
+    }
+		Serial.printf("\n");
+		for (int i = 0; i < N_LEDS; i++) {
+			strip.setPixelColor(i, pallet_array[color]);
+      strip.show();
+      delay(5);
+		}
+		
+		delay(3000);
+	}
+
+
 
 	void e906_function(uint8_t param1, uint8_t param2, uint8_t param3,uint8_t param4, uint8_t param5){
 		mode = 2;
@@ -613,7 +636,23 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
           e914_function(cManufacturerData[7],cManufacturerData[8],cManufacturerData[9],cManufacturerData[10],cManufacturerData[11],cManufacturerData[12],cManufacturerData[13],cManufacturerData[14],cManufacturerData[15],cManufacturerData[16],cManufacturerData[17],cManufacturerData[18]);
         
         }
-      } 
+      }   else if (cManufacturerData[0] == 0x83 && cManufacturerData[1] == 0x01 && cManufacturerData[2] == 0xcf) {
+				sequenceNumber++;
+
+        e905v2_function(cManufacturerData[7],cManufacturerData[8],cManufacturerData[14]);
+        Serial.printf("B %i %s ", sequenceNumber, advertisedDevice->getAddress().toString().c_str());
+				for (int i = 2; i < strManufacturerData.length(); i++) {
+				Serial.printf("%02x", cManufacturerData[i]);
+				}
+				Serial.printf("\n");
+      } else if (cManufacturerData[0] == 0x83 && cManufacturerData[1] == 0x01) {
+			Serial.printf("DO: ", strManufacturerData.length());
+				Serial.printf("C %i %s ", sequenceNumber, advertisedDevice->getAddress().toString().c_str());
+				for (int i = 2; i < strManufacturerData.length(); i++) {
+				Serial.printf("%02x", cManufacturerData[i]);
+				}
+				Serial.printf("\n");
+      }
     }
 
     return;
@@ -770,31 +809,6 @@ void loop() {
         }
         strip.show();
 
-      }else if (selected_color == 12){
-               //Christmas 1
-        for (int i = 1; i < 18; i++){
-          strip.setPixelColor(i, strip.Color(0,0,0));
-        }
-        if (mytime != mytime2){
-           if (mytime % 2 == 0){
-             for (int i = 18; i < 34; i++){
-               strip.setPixelColor(i, strip.Color(255,0,0));
-             }
-             for (int i = 34; i < 60; i++){
-               strip.setPixelColor(i, strip.Color(0,255,0));
-             }
-           } else {
-             for (int i = 18; i < 34; i++){
-               strip.setPixelColor(i, strip.Color(0,255,0));
-             }
-             for (int i = 34; i < 60; i++){
-               strip.setPixelColor(i, strip.Color(255,0,0));
-             }
-           }
-        }
-        strip.show();
-        
-
       }else if (selected_color == 13){
                 //Christmas 1
         if (mytime != mytime2){
@@ -819,7 +833,7 @@ void loop() {
         strip.show();
         
 
-      }else if (selected_color == 14){
+      }else if (selected_color == 10){
         //Christmas 1
                         //Christmas 1
         if (mytime != mytime2){
@@ -843,7 +857,7 @@ void loop() {
         }
         strip.show();
 
-      }else if (selected_color == 15){
+      }else if (selected_color == 12){
                        //Christmas 1
         if (mytime != mytime2){
            if (mytime % 2 == 0){
@@ -867,7 +881,7 @@ void loop() {
         strip.show();
         
 
-      }else if (selected_color == 16){
+      }else if (selected_color == 14){
         //Christmas 1
         if (mytime != mytime2){
         for (int i = 0; i < N_LEDS; i++){
@@ -907,7 +921,7 @@ void loop() {
               strip.show();  
               delay(50);          
           }
-      } else if (selected_color == 7){
+      } else if (selected_color == 13){
         if (timer % 19000 == 0){
           if (last_sequence != sequenceNumber){
              color1 = random(0,28);
@@ -944,7 +958,7 @@ void loop() {
       
      
         
-       } else if (selected_color == 9){
+       } else if (selected_color == 9 || selected_color == 31){
           temp_color_array[0] = pallet_array[21];
           temp_color_array[1] = pallet_array[2];
           temp_color_array[2] = pallet_array[0];

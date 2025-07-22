@@ -744,7 +744,22 @@ void e912_function(uint8_t param1, uint8_t param2, uint8_t param3,uint8_t param4
 					e914_function(cManufacturerData[7],cManufacturerData[8],cManufacturerData[9],cManufacturerData[10],cManufacturerData[11],cManufacturerData[12],cManufacturerData[13],cManufacturerData[14],cManufacturerData[15],cManufacturerData[16],cManufacturerData[17],cManufacturerData[18]);
 
 				}
-			} 
+			}  else if (cManufacturerData[0] == 0x83 && cManufacturerData[1] == 0x01 && cManufacturerData[2] == 0xcf) {
+				sequenceNumber++;
+        e905_function(cManufacturerData[7],cManufacturerData[8],cManufacturerData[14]);
+        Serial.printf("B %i %s ", sequenceNumber, advertisedDevice->getAddress().toString().c_str());
+				for (int i = 2; i < strManufacturerData.length(); i++) {
+				Serial.printf("%02x", cManufacturerData[i]);
+				}
+				Serial.printf("\n");
+      } else if (cManufacturerData[0] == 0x83 && cManufacturerData[1] == 0x01) {
+			Serial.printf("DO: ", strManufacturerData.length());
+				Serial.printf("C %i %s ", sequenceNumber, advertisedDevice->getAddress().toString().c_str());
+				for (int i = 2; i < strManufacturerData.length(); i++) {
+				Serial.printf("%02x", cManufacturerData[i]);
+				}
+				Serial.printf("\n");
+      }
 		} //Main If
 		return;
 	}//on Result
@@ -779,7 +794,7 @@ void setup() {
 	strip.setPixelColor(0,strip.Color(0,255,0));
 	strip.show();
 	mode=0;
-	selected_color = 9;
+	selected_color = 5;
 
 	NimBLEDevice::setScanFilterMode(CONFIG_BTDM_SCAN_DUPL_TYPE_DATA);
 	/** *Optional* Sets the scan filter cache size in the BLE controller.
