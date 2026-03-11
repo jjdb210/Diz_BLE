@@ -32,7 +32,7 @@
 #define DRESS_ID 1  //Each dress needs an ID (1-5) (Links specific wands. Not currently in use)
 #define PIN D10
 //Initiliaze the dress strip.
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(N_LEDS, PIN, NEO_BGR + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(N_LEDS, PIN, NEO_RGB + NEO_KHZ800);
 
 int scanTime = 1;  //In seconds
 int sequenceNumber = 0;
@@ -78,45 +78,67 @@ uint32_t pallet_array[] = {
   strip.Color(153, 0, 153),      //13 = pink
   strip.Color(255, 50, 50),      //14 = pink
   strip.Color(255, 60, 0),       //15 = Yellow Orange
-  strip.Color(255, 255, 128),    //16 Off Yellow
-  strip.Color(255, 200, 50),     //17 Yellow ORange
-  strip.Color(51, 255, 51), 	 //18 Lime Greenstrip.Color(51, 255, 51), 
+  strip.Color(255, 255, 114),    //16 Off Yellow
+  strip.Color(200, 180, 0),     //17 Yellow
+  strip.Color(200, 210, 0), 	 //18 Lime Greenstrip.Color(51, 255, 51), 
   strip.Color(255, 50, 0),       //19 Orange
   strip.Color(255, 30, 0),       //20 Red Orange?
   strip.Color(255, 0, 0),        //21 Red 
   strip.Color(0, 255, 255),		 //22 cyan
-  strip.Color(0, 255, 255),		  //23 cyan
-  strip.Color(0, 255, 255),		//24 cyan
+  strip.Color(0, 255, 180),		  //23 cyan WITH A HINT OF GREEN
+  strip.Color(0, 200, 120),		//24 cyan
   strip.Color(0, 255, 0),         //25 Green
-  strip.Color(0, 255, 51),  		//26 Lime Green
+  strip.Color(50, 255, 0),  		//26 Lime Green
   strip.Color(255, 255, 255),		//27 White
   strip.Color(255, 255, 255),		//28 white
   strip.Color(0, 0, 0),				//29 Off
-  strip.Color(0, 0, 0),				//unique
+  strip.Color(255, 255, 255),				//MB Default Color (Unique)
   strip.Color(255, 255, 255)      //Random                   
-};
+}; 
 
 // This is used by the bluetooth wand.
 // More colors can be added.
 uint32_t mode_array[] = {
   strip.Color(0,0,255),
   strip.Color(0,255,0),
-  strip.Color(0,255,255),
+  strip.Color(255,0,0),
   strip.Color(255,255,0),
   strip.Color(255,0,255),
   strip.Color(255,255,255),
-  strip.Color(255, 0, 0),     //17 Yellow ORange
+  strip.Color(0, 255, 255),     //17 Yellow ORange
   strip.Color(50, 50, 50),                                   //18 Lime Greenstrip.Color(51, 255, 51), 
   strip.Color(255, 99, 33),       //19 Orange
   strip.Color(255, 102, 0),
   strip.Color(195, 122, 123), 
+  strip.Color(195, 192, 123), 
+  strip.Color(195, 122, 192), 
+  strip.Color(195, 0, 123), 
+  strip.Color(195, 0, 96), 
+  strip.Color(125, 0, 123), 
+
+  strip.Color(0,0,128),
+  strip.Color(0,128,0),
+  strip.Color(128,0,0),
+  strip.Color(128,128,0),
+  strip.Color(128,0,128),
+  strip.Color(128,128,128),
+  strip.Color(0, 128, 128),     //17 Yellow ORange
+  strip.Color(25, 25, 25),                                   //18 Lime Greenstrip.Color(51, 255, 51), 
+  strip.Color(128, 99, 33),       //19 Orange
+  strip.Color(128, 102, 0),
+  strip.Color(90, 122, 123), 
+  strip.Color(90, 192, 123), 
+  strip.Color(90, 122, 192), 
+  strip.Color(90, 0, 123), 
+  strip.Color(90, 0, 96), 
+  strip.Color(60, 0, 123), 
 };  
 
 
 
 
 //This is the Bluetooth scanner... Listening for all the fun stuff.
-class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
+class MyAdvertisedDeviceCallbacks : public NimBLEScanCallbacks {
   
 	// Solid Pallette Colors
 	void e905_function(uint8_t param1, uint8_t param2, uint8_t param3){
@@ -538,14 +560,18 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 
 
 
-  void onResult(BLEAdvertisedDevice *advertisedDevice) {
 
-    //Anything that doesn't have this, we should just ignore.
-    if (advertisedDevice->haveManufacturerData() == true) {
+  void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
+
+    if (advertisedDevice->haveManufacturerData()) {
       std::string strManufacturerData = advertisedDevice->getManufacturerData();
-      uint8_t cManufacturerData[100];
-      strManufacturerData.copy((char *)cManufacturerData, strManufacturerData.length(), 0);
+      uint8_t cManufacturerData[256] = {0};
 
+      if (strManufacturerData.length() > sizeof(cManufacturerData)) {
+        return;
+      }
+
+      strManufacturerData.copy((char*)cManufacturerData, strManufacturerData.length(), 0);
 
       //Is this Justins Wand?
       if (cManufacturerData[0] == 0x42 && cManufacturerData[1] == 0x01) {
@@ -711,8 +737,8 @@ void setup() {
  */
   NimBLEDevice::setScanDuplicateCacheSize(10);
   NimBLEDevice::init("");
-  pBLEScan = BLEDevice::getScan();  //create new scan
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks()); //Whats The True do here Justin?
+  pBLEScan = NimBLEDevice::getScan();  //create new scan
+  pBLEScan->setScanCallbacks(new MyAdvertisedDeviceCallbacks(), true); //Whats The True do here Justin?
   pBLEScan->setActiveScan(false);           // Active scan requires response from target. DO NOT USE for dresses.
   pBLEScan->setInterval(100);                // How often the scan occurs / switches channels; in milliseconds,
   pBLEScan->setWindow(99);                  // How long to scan during the interval; in milliseconds.
@@ -725,12 +751,12 @@ long mytime2;
 
 void loop() {
   timer++;
-  //mytime = rtc.getEpoch();
+
   //Simple check to make sure scanner never stops.
   if (timer % 100 == 0) {  
     if(pBLEScan->isScanning() == false) {
       Serial.printf("New Scan Started \n");      
-      pBLEScan->start(0, nullptr, true);
+      pBLEScan->start(0, false, true);
     }
   }
   if (timer == 19999){
@@ -747,6 +773,7 @@ void loop() {
       
       
       if (selected_color == 10){
+        //Striped Colors
         if (mode != lastmode || selected_color != last_color) {
           temp_color_array[0] = pallet_array[21];
           temp_color_array[1] = pallet_array[2];
@@ -771,8 +798,7 @@ void loop() {
 
        } else if (selected_color == 11){
         //Christmas 1
-        if (mytime != mytime2){
-           if (mytime % 3 == 0){
+           if ((timer/100) % 3 == 0){
              for (int i = 1; i < N_LEDS; i++){
                if (i % 3 == 0){
                strip.setPixelColor(i, strip.Color(255,0,0));
@@ -782,7 +808,7 @@ void loop() {
                  strip.setPixelColor(i, strip.Color(255,255,255));
                }
              }
-           } if (mytime % 3 == 1){
+           } if ((timer/100)  % 3 == 1){
                for (int i = 1; i < N_LEDS; i++){
                if (i % 3 == 1){
                strip.setPixelColor(i, strip.Color(255,0,0));
@@ -805,14 +831,13 @@ void loop() {
                  strip.setPixelColor(i, strip.Color(255,255,255));
                }
              }
-           }
+           
         }
         strip.show();
 
       }else if (selected_color == 13){
                 //Christmas 1
-        if (mytime != mytime2){
-           if (mytime % 2 == 0){
+           if ((timer / 300) % 2 == 0){
              for (int i = 0; i < N_LEDS; i++){
                if (i % 2 == 0){
                  strip.setPixelColor(i, strip.Color(255,255,255));
@@ -828,16 +853,15 @@ void loop() {
                  strip.setPixelColor(i, strip.Color(255,255,255));                 
                }
              }
-           }
+          
         }
         strip.show();
         
 
-      }else if (selected_color == 10){
+      }else if (selected_color == 15){
         //Christmas 1
                         //Christmas 1
-        if (mytime != mytime2){
-           if (mytime % 2 == 0){
+           if ((timer / 200) % 2 == 0){
              for (int i = 0; i < N_LEDS; i++){
                if (i % 2 == 0){
                  strip.setPixelColor(i, strip.Color(255,255,255));
@@ -853,14 +877,13 @@ void loop() {
                  strip.setPixelColor(i, strip.Color(255,255,255));                 
                }
              }
-           }
+           
         }
         strip.show();
 
       }else if (selected_color == 12){
                        //Christmas 1
-        if (mytime != mytime2){
-           if (mytime % 2 == 0){
+           if ((timer/100) % 2 == 0){
              for (int i = 0; i < N_LEDS; i++){
                if (i % 2 == 0){
                  strip.setPixelColor(i, strip.Color(255,0,0));
@@ -876,40 +899,25 @@ void loop() {
                  strip.setPixelColor(i, strip.Color(255,0,0));                 
                }
              }
-           }
         }
         strip.show();
         
 
       }else if (selected_color == 14){
-        //Christmas 1
-        if (mytime != mytime2){
-        for (int i = 0; i < N_LEDS; i++){
-          strip.setPixelColor(i, strip.Color(0,0,120));
-        }
-        strip.setPixelColor(random(1,N_LEDS), strip.Color(255,255,255));
-        strip.setPixelColor(random(1,N_LEDS), strip.Color(255,255,255));
-
-        strip.setPixelColor(random(1,N_LEDS), strip.Color(255,255,255));
-        strip.show();
-        }
-      } else if (selected_color == 17){
-        //Christmas 1
+        //Starry Night
         
+          for (int i = 0; i < N_LEDS; i++){
+            strip.setPixelColor(i, strip.Color(0,0,120));
+          }
+          strip.setPixelColor(random(1,N_LEDS), strip.Color(255,255,255));
+          strip.setPixelColor(random(1,N_LEDS), strip.Color(255,255,255));
 
-      }else if (selected_color == 19){
-        //Christmas 1
+          strip.setPixelColor(random(1,N_LEDS), strip.Color(255,255,255));
+          strip.show();
+          delay(500);
         
-
-      } else if (selected_color == 20){
-        //Christmas 1
-        
-
-      }  else if (selected_color == 18){
-        //Christmas 1
-        
-
-      }  else if (selected_color == 8){
+      } else if (selected_color == 8){
+        //Slide Thru random pallette colrs
         if (timer % 1000 == 0){
               temp_x++;
               if (temp_x > N_LEDS * 3){
@@ -921,7 +929,7 @@ void loop() {
               strip.show();  
               delay(50);          
           }
-      } else if (selected_color == 13){
+      } else if (selected_color == 16){
         if (timer % 19000 == 0){
           if (last_sequence != sequenceNumber){
              color1 = random(0,28);
@@ -959,6 +967,7 @@ void loop() {
      
         
        } else if (selected_color == 9 || selected_color == 31){
+         //Rainbow
           temp_color_array[0] = pallet_array[21];
           temp_color_array[1] = pallet_array[2];
           temp_color_array[2] = pallet_array[0];
@@ -1011,5 +1020,4 @@ void loop() {
     lastmode = mode;
     last_color = selected_color;
   }
-   mytime2 = mytime;
 }

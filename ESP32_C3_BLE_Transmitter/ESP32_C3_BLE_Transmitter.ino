@@ -21,7 +21,7 @@
 #include "esp_bt_defs.h"
 #include "esp_bt_main.h"
 
-#define MAX_MANUFACTURER_DATA_SIZE 20
+#define MAX_MANUFACTURER_DATA_SIZE 100
 #define MAX_SERVICE_DATA_SIZE 11
 
 // What pin are the LEDs on the dress (D10 is NOT the same as 10). and how many are there?
@@ -72,32 +72,59 @@ uint32_t pallet_array[] = {
   strip.Color(153, 0, 153),      //13 = pink
   strip.Color(255, 50, 50),      //14 = pink
   strip.Color(255, 60, 0),       //15 = Yellow Orange
-  strip.Color(255, 255, 128),    //16 Off Yellow
-  strip.Color(255, 200, 50),     //17 Yellow ORange
-  strip.Color(51, 255, 51), 	 //18 Lime Greenstrip.Color(51, 255, 51), 
+  strip.Color(255, 255, 114),    //16 Off Yellow
+  strip.Color(200, 180, 0),     //17 Yellow
+  strip.Color(200, 210, 0), 	 //18 Lime Greenstrip.Color(51, 255, 51), 
   strip.Color(255, 50, 0),       //19 Orange
   strip.Color(255, 30, 0),       //20 Red Orange?
   strip.Color(255, 0, 0),        //21 Red 
   strip.Color(0, 255, 255),		 //22 cyan
-  strip.Color(0, 255, 255),		  //23 cyan
-  strip.Color(0, 255, 255),		//24 cyan
+  strip.Color(0, 255, 180),		  //23 cyan WITH A HINT OF GREEN
+  strip.Color(0, 200, 120),		//24 cyan
   strip.Color(0, 255, 0),         //25 Green
-  strip.Color(0, 255, 51),  		//26 Lime Green
+  strip.Color(50, 255, 0),  		//26 Lime Green
   strip.Color(255, 255, 255),		//27 White
   strip.Color(255, 255, 255),		//28 white
   strip.Color(0, 0, 0),				//29 Off
-  strip.Color(0, 0, 0),				//unique
+  strip.Color(255, 255, 255),				//MB Default Color (Unique)
   strip.Color(255, 255, 255)      //Random                   
+}; 
+
+uint32_t mode_array[] = {
+  strip.Color(0,0,255),
+  strip.Color(0,255,0),
+  strip.Color(255,0,0),
+  strip.Color(255,255,0),
+  strip.Color(255,0,255),
+  strip.Color(255,255,255),
+  strip.Color(0, 255, 255),     //17 Yellow ORange
+  strip.Color(50, 50, 50),                                   //18 Lime Greenstrip.Color(51, 255, 51), 
+  strip.Color(255, 99, 33),       //19 Orange
+  strip.Color(255, 102, 0),
+  strip.Color(195, 122, 123), 
+  strip.Color(195, 192, 123), 
+  strip.Color(195, 122, 192), 
+  strip.Color(195, 0, 123), 
+  strip.Color(195, 0, 96), 
+  strip.Color(125, 0, 123), 
+
+  strip.Color(0,0,128),
+  strip.Color(0,128,0),
+  strip.Color(128,0,0),
+  strip.Color(128,128,0),
+  strip.Color(128,0,128),
+  strip.Color(128,128,128),
+  strip.Color(0, 128, 128),     //17 Yellow ORange
+  strip.Color(25, 25, 25),                                   //18 Lime Greenstrip.Color(51, 255, 51), 
+  strip.Color(128, 99, 33),       //19 Orange
+  strip.Color(128, 102, 0),
+  strip.Color(90, 122, 123), 
+  strip.Color(90, 192, 123), 
+  strip.Color(90, 122, 192), 
+  strip.Color(90, 0, 123), 
+  strip.Color(90, 0, 96), 
+  strip.Color(60, 0, 123), 
 };     
-
-
-uint32_t mode_array[] = {strip.Color(0,0,255),
-                           strip.Color(0,255,0),
-                           strip.Color(255,0,0),
-                           strip.Color(100,100,0),
-                           strip.Color(100,0,100),
-                           strip.Color(100,100,100)
-                           };     
 
 //Keeps track of how long to transmit
 int transmit_times = 0;
@@ -198,8 +225,8 @@ class SimpleBLE {
 
 
 esp_ble_adv_data_t adv_data; // data that will be advertised
-byte dataBuffer[50];
-byte dataBuffer2[50];
+byte dataBuffer[100];
+byte dataBuffer2[100];
 
 
 // Standard parameters
@@ -257,6 +284,23 @@ static bool _init_gap(const char * name, esp_ble_adv_data_t* adv_data){
             return false;
         }
     }
+
+    esp_err_t err;
+
+    err = esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, ESP_PWR_LVL_P9);
+    if (err != ESP_OK) {
+        log_e("esp_ble_tx_power_set(ADV) failed");
+        return false;
+    }
+
+    // Optional: also set default BLE TX power for other BLE uses
+    err = esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
+    if (err != ESP_OK) {
+        log_e("esp_ble_tx_power_set(DEFAULT) failed");
+        return false;
+    }
+
+
     if(esp_ble_gap_set_device_name(name)){
         log_e("gap_set_device_name failed");
         return false;
@@ -453,7 +497,7 @@ void loop() {
         //asdf
         last_mode = -1;
         mode_step++;
-        if (mode_step >= 31){
+        if (mode_step >= 32){
           mode_step = 0;
         }
       } 
@@ -463,7 +507,7 @@ void loop() {
 // A long press will enable or disable blackout mode.
   if (BUTTON2_CurrentState == HIGH  && BUTTON2_LastState == LOW){
       temp_status = time;    
-      if (temp_status - BUTTON2_PressedTime > SHORT_PRESS_TIME){
+      if (temp_status - BUTTON2_PressedTime > 2000){
         Serial.println("Button 2 Long Press (Ignore)"); 
         transmit_times = -5;
         mode = 0;
@@ -485,10 +529,54 @@ void loop() {
 
       //Mode 1 - Dress Mode
       } else if (mode == 1){
+        char hexChar[2];
+        sprintf(hexChar,"%02x", mode_step);
+        advertisingdata = std::string("42010000") + hexChar;
 
 
       } else if (mode == 2){
       //Mode 2  - Magicband Mode
+          const std::string baseCodes[38] = {
+            "8301e200e90c00b10fb9b4a4a1ad307bfcb0",
+              "8301e200e91400060f4d5d58f44882d0651cd14602ed307bffb0",
+              "8301e200e910006f4897d00e80d146091930d04e00b0",
+              "8301e200e91200cf0fbca4bca4bc30d037f4d246001978b0",
+              "8301e200e911004f0f515558f44882d146023ed06505b0",
+              "8301e200e90e00010fb1b1b1b1b159190248aeb0",
+              "8301e200e910006f4897d00e80d146091930d04e00b0",
+              "8301e200e91200cf0fbca4bca4bc30d037f4d246001978b0",
+              "8301e200e911004f0f515558f44882d146023ed06505b0",
+              "8301e200e90e00010fb1b1b1b1b159190248aeb0",
+              "8301e200e910006f4897d00e80d146091930d04e00b0",
+              "8301e200e91200cf0fbca4bca4bc30d037f4d246001978b0",
+              "8301e200e911004f0f515558f44882d146023ed06505b0",
+              "8301e200e90e00010fb1b1b1b1b159190248aeb0",
+              "8301e200e910006f4897d00e80d146091930d04e00b0",
+              "8301e200e91200cf0fbca4bca4bc30d037f4d246001978b0",
+              "8301e200e911004f0f515558f44882d146023ed06505b0",
+              "8301e200e90e00010fb1b1b1b1b159190248aeb0",
+              "8301e200e910006f4897d00e80d146091930d04e00b0",
+              "8301e200e91200cf0fbca4bca4bc30d037f4d246001978b0",
+              "8301e200e911004f0f515558f44882d146023ed06505b0",
+              "8301e200e90e00010fb1b1b1b1b159190248aeb0",
+              "8301e200e910006f4897d00e80d146091930d04e00b0",
+              "8301e200e91200cf0fbca4bca4bc30d037f4d246001978b0",
+              "8301e200e911004f0f515558f44882d146023ed06505b0",
+              "8301e200e90e00010fb1b1b1b1b159190248aeb0",
+              "8301e200e910006f4897d00e80d146091930d04e00b0",
+              "8301e200e91200cf0fbca4bca4bc30d037f4d246001978b0",
+              "8301e200e911004f0f515558f44882d146023ed06505b0",
+              "8301e200e90e00010fb1b1b1b1b159190248aeb0",
+              "8301e200e910006f4897d00e80d146091930d04e00b0",
+              "8301e200e91200cf0fbca4bca4bc30d037f4d246001978b0",
+              "8301e200e911004f0f515558f44882d146023ed06505b0",
+              "8301e200e90e00010fb1b1b1b1b159190248aeb0",
+              "8301e200e910006f4897d00e80d146091930d04e00b0",
+              "8301e200e91200cf0fbca4bca4bc30d037f4d246001978b0",
+              "8301e200e911004f0f515558f44882d146023ed06505b0",
+              "8301e200e90e00010fb1b1b1b1b159190248aeb0"
+          };
+          advertisingdata = baseCodes[mode_step];
 
       }
 
@@ -501,7 +589,11 @@ void loop() {
   if (mode != last_mode){
      strip.setBrightness(50);
      for (int i=1; i<N_LEDS; i++){
-       strip.setPixelColor(i, pallet_array[mode_step]);    
+       if (mode == 0){
+         strip.setPixelColor(i, pallet_array[mode_step]);  
+       } else if (mode == 1){
+         strip.setPixelColor(i, mode_array[mode_step]);
+       }  
      }
 
 
